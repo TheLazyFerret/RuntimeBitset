@@ -19,4 +19,4 @@ Uses same (or very similar) interface to std::bitset
 
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+[MIT](LICENSE)
