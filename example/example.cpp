@@ -5,6 +5,8 @@
  * example file about the usage of RuntimeBitset
  */
 
+// Compilation: g++ -Wall -Werror -pedantic example/example.cpp -Ilib -o runtimebitset
+
 #include "RuntimeBitset/RuntimeBitset.hpp"
 #include <iostream>
 
@@ -15,7 +17,10 @@ int main() {
   RuntimeBitset bitset2(30); // build a bitset of 30 with all set to 0
   // build a bitset of 30 bits and append the first 64 bits (if the size is less than 64, append the first n bits)
   RuntimeBitset bitset3(30, 50);
-  std::cin >> bitset2;  // build from standard input. The size will be the size of the input
+  // build from standard input. The size will be the size of the input (previous size will be ignored)
+  std::cin >> bitset2;
+
+  std::cout << bitset2 << std::endl;
 
   std::cout << bitset3 << std::endl; // print the bitset
   std::cout << bitset3.to_string() << std::endl; // same as above
