@@ -8,7 +8,7 @@
 #include "RuntimeBitset/RuntimeBitset.hpp"
 #include <iostream>
 
-using namespace DynBitset;
+using namespace RunBitset;
 
 int main() {
   RuntimeBitset bitset1; // build a bitset of 64 bits with all set to 0
