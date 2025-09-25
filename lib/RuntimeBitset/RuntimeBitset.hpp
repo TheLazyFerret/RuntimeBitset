@@ -21,12 +21,12 @@ namespace RunBitset {
 
 class RuntimeBitset {
   public:
-    inline RuntimeBitset(const std::size_t t_size, const std::size_t t_num);
-    inline RuntimeBitset(const std::size_t t_size);
-    inline RuntimeBitset(const std::string& t_string);
     // SPECIAL MEMBERS
-    inline RuntimeBitset(); // Default constructor
-    inline ~RuntimeBitset(); // Destructor
+    RuntimeBitset(const std::size_t t_size, const std::size_t t_num);
+    RuntimeBitset(const std::size_t t_size);
+    RuntimeBitset(const std::string& t_string);
+    RuntimeBitset(); // Default constructor
+    ~RuntimeBitset(); // Destructor
     inline RuntimeBitset(const RuntimeBitset& t_RuntimeBitset); // Copy constructor
     inline RuntimeBitset& operator=(const RuntimeBitset& t_RuntimeBitset); // Copy assignment
     inline RuntimeBitset(RuntimeBitset&& t_RuntimeBitset); // Move constructor
@@ -36,7 +36,7 @@ class RuntimeBitset {
     inline unsigned long long to_ullong() const noexcept;
     inline unsigned long to_ulong() const noexcept;
 
-    // Operator acess
+    // NORMAL MEMBERS
     inline bool operator[](std::size_t t_position) const;
 
     inline bool test(std::size_t t_position) const;
@@ -83,9 +83,8 @@ class RuntimeBitset {
 
     class Reference {
       public:
-        // Constructor
-        inline Reference(RuntimeBitset& t_reference, const std::size_t t_pos) : m_position(t_pos), m_bitset(t_reference) {}
-        // SPECIAL MEMBERS
+        Reference(RuntimeBitset& t_reference, const std::size_t t_pos) 
+        : m_position(t_pos), m_bitset(t_reference) {}
         Reference() = default;
         ~Reference() = default;
         Reference(const Reference&) = default;
@@ -105,25 +104,24 @@ class RuntimeBitset {
 
     inline Reference operator[](std::size_t t_pos);
   private:
-    std::size_t* m_bits = nullptr; // little endian
-    std::size_t* m_mask = nullptr; // little endian
-    std::size_t  m_size;
-    std::size_t  m_blocks;
-
     // STATIC MEMBERS
-    inline static constexpr std::size_t BLOCK_SIZE = sizeof(std::size_t) * 8; // Number of bits of each block
+    // Number of bits of each block
+    inline static constexpr std::size_t BLOCK_SIZE = sizeof(std::size_t) * 8;
     inline static constexpr std::size_t ALL_BITS_ONE = ~(0);
 
     // PRIVATE METHODS
     inline void buildBlocks();
     inline void buildMask();
-    inline void build(const std::size_t t_size); // Call buildBlocks, buildMask
+    // Call buildBlocks, buildMask
+    inline void build(const std::size_t t_size);
     inline void clean(); // Put all bits to 0
     inline void destroy(); // Destroy the object
     inline static void copy(RuntimeBitset& t_copy, const RuntimeBitset& t_toCopy);
     inline static void move(RuntimeBitset& t_copy, RuntimeBitset& t_toMove);
-    inline static std::size_t getNumberBlocks(const std::size_t t_size) noexcept; // Method to calculate the number of needed blocks
-    inline static std::size_t getLastMask(const std::size_t t_number_bits); // Method to calculate the mask of the last block
+    // Method to calculate the number of needed blocks
+    inline static std::size_t getNumberBlocks(const std::size_t t_size) noexcept;
+    // Method to calculate the mask of the last block
+    inline static std::size_t getLastMask(const std::size_t t_number_bits);
     // First block position, second mask position
     inline std::pair<std::size_t, std::size_t> getPosition(std::size_t t_position) const;
     // Returns the mask position inside a block
@@ -137,6 +135,12 @@ class RuntimeBitset {
     inline void bitwiseRight(std::size_t t_pos);
 
     inline void buildFromString(const std::string& t_string);
+
+    // Attributes
+    std::size_t* m_bits = nullptr; // little endian
+    std::size_t* m_mask = nullptr; // little endian
+    std::size_t  m_size;
+    std::size_t  m_blocks;
 };
 
 } // namespace RunBitset
@@ -288,10 +292,12 @@ std::string RunBitset::RuntimeBitset::to_string() const noexcept {
 }
 
 void RunBitset::RuntimeBitset::build(const std::size_t t_size) {
-  if (t_size == 0) throw (RunBitsetException::RuntimeBitsetInvalidSize()); // Bitsets of size 0 breaks the implementation
+  // Bitsets of size 0 breaks the implementation
+  if (t_size == 0) throw (RunBitsetException::RuntimeBitsetInvalidSize());
   destroy();
   m_size = t_size;
-  m_blocks = getNumberBlocks(t_size); // Get the minimal number of blocks needed to represent the numbe of bits
+  // Get the minimal number of blocks needed to represent the numbe of bits
+  m_blocks = getNumberBlocks(t_size);
   buildBlocks();
   buildMask();
 }
@@ -315,7 +321,8 @@ void RunBitset::RuntimeBitset::buildMask() {
     m_mask[i] = ALL_BITS_ONE;
   }
   std::size_t lastMask = m_size - ((m_blocks -1) * BLOCK_SIZE);
-  m_mask[m_blocks - 1] = getLastMask(lastMask); // Only the most significant block has a no ~0 mask
+  // Only the most significant block has a no ~0 mask
+  m_mask[m_blocks - 1] = getLastMask(lastMask);
 }
 
 void RunBitset::RuntimeBitset::clean() {
@@ -343,7 +350,8 @@ void RunBitset::RuntimeBitset::destroy() {
   m_blocks = 0;
 }
 
-void RunBitset::RuntimeBitset::copy(RuntimeBitset& t_copy, const RuntimeBitset& t_toCopy) {
+void RunBitset::RuntimeBitset::copy
+(RuntimeBitset& t_copy, const RuntimeBitset& t_toCopy) {
   t_copy.destroy();
   t_copy.build(t_toCopy.size()); // bitset of same size as t_toCopy
   for (std::size_t i = 0; i < t_copy.m_blocks; ++i) {
@@ -352,7 +360,8 @@ void RunBitset::RuntimeBitset::copy(RuntimeBitset& t_copy, const RuntimeBitset& 
   }
 }
 
-void RunBitset::RuntimeBitset::move(RuntimeBitset& t_move, RuntimeBitset& t_toMove) {
+void RunBitset::RuntimeBitset::move
+(RuntimeBitset& t_move, RuntimeBitset& t_toMove) {
   t_move.destroy();
   // MOVE
   t_move.m_bits = t_toMove.m_bits;
@@ -369,39 +378,45 @@ void RunBitset::RuntimeBitset::move(RuntimeBitset& t_move, RuntimeBitset& t_toMo
 
 unsigned long long RunBitset::RuntimeBitset::to_ullong() const noexcept {
   std::size_t bits = m_bits[0] & m_mask[0]; // Aply mask to avoid useless bits
-  return static_cast<unsigned long long>(bits); // return the less significant <sizeof(ullong) * 8 bits> of the less significant block
+  // return the less significant <sizeof(ullong) * 8 bits> of the less significant block
+  return static_cast<unsigned long long>(bits);
 
 }
 
 unsigned long RunBitset::RuntimeBitset::to_ulong() const noexcept {
   std::size_t bits = m_bits[0] & m_mask[0];// Aply mask to avoid useless bits
-  return static_cast<unsigned long>(bits); // return the less significant <sizeof(ulong) * 8 bits> of the less significant block
+  // return the less significant <sizeof(ulong) * 8 bits> of the less significant block
+  return static_cast<unsigned long>(bits);
 }
 
 bool RunBitset::RuntimeBitset::all() const noexcept {
   for ( std::size_t i = 0; i < m_blocks; ++i) {
-    if ((m_bits[i] & m_mask[i]) != m_mask[i]) return false; // If applying the mask is equal to mask, then it is true
+    // If applying the mask is equal to mask, then it is true
+    if ((m_bits[i] & m_mask[i]) != m_mask[i]) return false;
   }
   return true;
 }
 
 bool RunBitset::RuntimeBitset::any() const noexcept {
   for (std::size_t i = 0; i < m_blocks; ++i) {
-    if ((m_bits[i] & m_mask[i]) != 0) return true; // If applying the mask is not 0, then atleast 1 bit is set
+    // If applying the mask is not 0, then atleast 1 bit is set
+    if ((m_bits[i] & m_mask[i]) != 0) return true;
   }
   return false;
 }
 
 bool RunBitset::RuntimeBitset::none() const noexcept {
   for (std::size_t i = 0; i < m_blocks; ++i) {
-    if ((m_bits[i] & m_mask[i]) != 0) return false; // exactly the opposite to any
+    // exactly the opposite to any
+    if ((m_bits[i] & m_mask[i]) != 0) return false;
   }
   return true;
 }
 
-// At first, my idea was the .second was t_position (relative position inside the block)
-// But for more comfortable code, I decided the .second was the mask of the relative position
-std::pair<std::size_t, std::size_t> RunBitset::RuntimeBitset::getPosition(std::size_t t_position) const {
+/// At first, my idea was the .second was t_position (relative position inside the block)
+/// But for more comfortable code, I decided the .second was the mask of the relative position
+std::pair<std::size_t, std::size_t> 
+RunBitset::RuntimeBitset::getPosition(std::size_t t_position) const {
   if (t_position >= m_size) throw(RunBitsetException::RuntimeBitsetOutOfRange());
   std::size_t blockPosition = 0;
   // Get in what block is allocated
@@ -412,7 +427,7 @@ std::pair<std::size_t, std::size_t> RunBitset::RuntimeBitset::getPosition(std::s
   return std::make_pair(blockPosition, getMaskPosition(t_position));
 }
 
-// Returns a mask with all 0 except in the t_position
+/// Returns a mask with all 0 except in the t_position
 std::size_t RunBitset::RuntimeBitset::getMaskPosition(const std::size_t t_position) {
   assert(t_position <= BLOCK_SIZE);
   constexpr std::size_t auxMask = 1;
@@ -464,7 +479,8 @@ RunBitset::RuntimeBitset& RunBitset::RuntimeBitset::flip(const std::size_t t_pos
   const std::size_t positionValueReversed = ~m_bits[blockPosition] & positionMask;
   // original block with the position bit = 0
   const std::size_t allExceptPositionValue = m_bits[blockPosition] & ~positionMask;
-  m_bits[blockPosition] = allExceptPositionValue | positionValueReversed; // example: 000R000 | XXX0XXX
+  // example: 000R000 | XXX0XXX
+  m_bits[blockPosition] = allExceptPositionValue | positionValueReversed;
   return *this;
 }
 
@@ -496,23 +512,27 @@ bool RunBitset::RuntimeBitset::getValueInPosition(std::size_t t_position) const 
   const std::pair<std::size_t, std::size_t> position(getPosition(t_position));
   const std::size_t blockPosition = position.first;
   const std::size_t positionMask = position.second;
-
-  const std::size_t auxBlock = m_bits[blockPosition] & positionMask; // Get all 0 and the value in t_position
+  
+  // Get all 0 and the value in t_position
+  const std::size_t auxBlock = m_bits[blockPosition] & positionMask;
   if ((auxBlock | 0) == 0) return false; // if BXB | 0 == 0, then X = 0
   return true;
 }
 
-RunBitset::RuntimeBitset& RunBitset::RuntimeBitset::operator&=(const RuntimeBitset& t_other) {
+RunBitset::RuntimeBitset& 
+RunBitset::RuntimeBitset::operator&=(const RuntimeBitset& t_other) {
   *this = *this & t_other;
   return *this;
 }
 
-RunBitset::RuntimeBitset& RunBitset::RuntimeBitset::operator|=(const RuntimeBitset& t_other) {
+RunBitset::RuntimeBitset& 
+RunBitset::RuntimeBitset::operator|=(const RuntimeBitset& t_other) {
   *this = *this | t_other;
   return *this;
 }
 
-RunBitset::RuntimeBitset& RunBitset::RuntimeBitset::operator^=(const RuntimeBitset& t_other) {
+RunBitset::RuntimeBitset& 
+RunBitset::RuntimeBitset::operator^=(const RuntimeBitset& t_other) {
   *this = *this ^ t_other;
   return *this;
 }
@@ -525,24 +545,28 @@ RunBitset::RuntimeBitset RunBitset::RuntimeBitset::operator~() {
   return *this;
 }
 
-RunBitset::RuntimeBitset RunBitset::RuntimeBitset::operator<<(std::size_t t_pos) const {
+RunBitset::RuntimeBitset 
+RunBitset::RuntimeBitset::operator<<(std::size_t t_pos) const {
   RuntimeBitset aux = *this;
   aux.bitwiseLeft(t_pos);
   return aux;
 }
 
-RunBitset::RuntimeBitset RunBitset::RuntimeBitset::operator>>(std::size_t t_pos) const {
+RunBitset::RuntimeBitset 
+RunBitset::RuntimeBitset::operator>>(std::size_t t_pos) const {
   RuntimeBitset aux = *this;
   aux.bitwiseRight(t_pos);
   return aux;
 }
 
-RunBitset::RuntimeBitset& RunBitset::RuntimeBitset::operator<<=(std::size_t t_pos) {
+RunBitset::RuntimeBitset& 
+RunBitset::RuntimeBitset::operator<<=(std::size_t t_pos) {
   this->bitwiseLeft(t_pos);
   return *this;
 }
 
-RunBitset::RuntimeBitset& RunBitset::RuntimeBitset::operator>>=(std::size_t t_pos) {
+RunBitset::RuntimeBitset& 
+RunBitset::RuntimeBitset::operator>>=(std::size_t t_pos) {
   this->bitwiseRight(t_pos);
   return *this;
 }
@@ -564,7 +588,8 @@ void RunBitset::RuntimeBitset::bitwiseLeft(std::size_t t_pos) {
   if (blockWise > 0) this->shiftBlocksLeft(blockWise);
   
   for (long long i = this->m_blocks - 1; i >= 0; --i) {
-    const std::size_t remain = (this->m_bits[i] & this->m_mask[i]) >> (BLOCK_SIZE - t_pos); // mask applied
+    // Apply mask
+    const std::size_t remain = (this->m_bits[i] & this->m_mask[i]) >> (BLOCK_SIZE - t_pos);
     this->m_bits[i] = (this->m_bits[i] & this->m_mask[i]) << t_pos;
     if ((i + 1) < static_cast<long long>(this->m_blocks)) this->m_bits[i + 1] = this->m_bits[i + 1] | remain;
   }
@@ -586,14 +611,16 @@ void RunBitset::RuntimeBitset::bitwiseRight(std::size_t t_pos) {
   }
   if (blockWise > 0) this->shiftBlocksRight(blockWise);
   for (long long i = 0; i < static_cast<long long>(this->m_blocks); ++i) {
-    const std::size_t remain = (this->m_bits[i] & this->m_mask[i]) << (BLOCK_SIZE - t_pos); // mask applied
+    // Apply mask
+    const std::size_t remain = (this->m_bits[i] & this->m_mask[i]) << (BLOCK_SIZE - t_pos);
     this->m_bits[i] = (this->m_bits[i] & this->m_mask[i]) >> t_pos;
     if ((i - 1) >= static_cast<long long>(0)) this->m_bits[i - 1] = this->m_bits[i - 1] | remain;
   }
 }
 
 // SHIFT BLOCKS(LEFT|RIGHT)
-// Due this implementation is not a continuous set of bits, when you apply a shift of more than the size of the block
+// Due this implementation is not a continuous set of bits, 
+//   when you apply a shift of more than the size of the block
 // It is more easy just move the blocks of position
 void RunBitset::RuntimeBitset::shiftBlocksLeft(std::size_t t_pos) {
   for (long long i = m_blocks - 1; i >= 0; --i) {
@@ -635,13 +662,15 @@ void RunBitset::RuntimeBitset::buildFromString(const std::string& t_string) {
   }
 }
 
-RunBitset::RuntimeBitset::Reference RunBitset::RuntimeBitset::operator[](std::size_t t_pos) {
+RunBitset::RuntimeBitset::Reference 
+RunBitset::RuntimeBitset::operator[](std::size_t t_pos) {
   if (t_pos >= m_size) throw(RunBitsetException::RuntimeBitsetOutOfRange());
   return Reference(*this, t_pos);
 }
 
 // REFERENCE
-RunBitset::RuntimeBitset::Reference& RunBitset::RuntimeBitset::Reference::operator=(const bool t_value) {
+RunBitset::RuntimeBitset::Reference& 
+RunBitset::RuntimeBitset::Reference::operator=(const bool t_value) {
   if (t_value == true) {
     m_bitset.set(m_position);
   }
